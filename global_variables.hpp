@@ -4,7 +4,7 @@
 #include <cmath>
 #include <raylib.h>
 struct {
-
+  
   const double pi = 3.1415926535897932384626433832795028841971693993751;
   //if ur asking how i derived G, i have no idea, i probably pulled it out of the deepest part of my ass
   //like, why tf is it 4pi^2, wtf
@@ -21,8 +21,7 @@ struct {
 
   const Vector3 winSize = {1600, 900};
   const Vector3 winCenter = {winSize.x / 2, winSize.y / 2};
-
-  const int nOfBodies = 2;
+  
   const bool hasDE = true;
 
   bool trajectories = false;

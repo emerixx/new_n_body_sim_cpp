@@ -3,6 +3,7 @@
 
 
 
+#include <string>
 struct vctr {
   double x;
   double y;
@@ -10,6 +11,7 @@ struct vctr {
   vctr(double x_in, double y_in) : x(x_in), y(y_in), z(0) {}
   vctr(double x_in, double y_in, double z_in) : x(x_in), y(y_in), z(z_in) {}
   vctr() : x(0), y(0), z(0) {}
+  std::string output_str();
 };
 
 struct vctrf {
