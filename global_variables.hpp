@@ -9,7 +9,7 @@ struct {
   //if ur asking how i derived G, i have no idea, i probably pulled it out of the deepest part of my ass
   //like, why tf is it 4pi^2, wtf
   const double G = 4 * pow(pi, 2); // AU^3 MO^-1 Year^-2
-  const double constTimeStep = pow(10, -2);
+  const double constTimeStep = pow(10, -1);
   const int circleSegments = 36;
   const int grid_spacing = 10;
   const int grid_lines = 55;
@@ -25,7 +25,7 @@ struct {
   const bool hasDE = true;
 
   bool trajectories = false;
-  double speed = 10;
+  double speed = 1;
   double move_no_mod = 1;
   double shift_mod = 10;
   double ctrl_mod = 100;

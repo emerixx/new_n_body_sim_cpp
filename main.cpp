@@ -2,6 +2,7 @@
 #include "rlgl.h"
 #include "vctr.hpp"
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <raylib.h>
 
@@ -87,28 +88,39 @@ using Bss = std::array<Bs, nOfBodies>;
 
 Bs update_bs(Bs bs) {
   double dt = global.constTimeStep * GetFrameTime() * global.speed;
-  vctr a;
-
-
-
-
+  std::cout<<"dt: "<<dt<<std::endl;
   bs.pos = bs.pos + bs.v * dt;
-  bs.v = bs.v + a * dt;
+  bs.v = bs.v + bs.ds.a * dt;
   return bs;
 }
 
 Bss update(Bss bss) {
   double d_mag;
+  double f_mag;
   vctr d;
-  for (int i = 0; i    < nOfBodies; i++){
-  for (int j = 0; j    < nOfBodies; j++){
-      //if i and j werent run b4
-    d=bss[i].pos-bss[j].pos;
-    bss[i].ds.a={0,0,0};
+  vctr f;
+  for (int i = 0; i < nOfBodies; i++) {
+    bss[i].ds.a = {0, 0, 0};
+    for (int j = 0; j < nOfBodies; j++) {
+      if (i==j) continue;
+      std::cout<<"i|j: "<<i<<"|"<<j<<std::endl;;
+      // if i and j werent run b4
 
-
-    bss[i] = update_bs(bss[i]);
+      d = (bss[i].pos - bss[j].pos);
+      d_mag = d.magnitude();
+      f_mag=0;
+      //-0.005<d.x<0.005
+      if(d_mag > -0.005 || d_mag < 0.005) f_mag = G * bss[j].m / pow(d_mag, 2);
+      
+      f=f- f_mag*d.normalised();
+      std::cout<<"f_mag: "<<f_mag<<std::endl;
+      std::cout<<"d.norm: "<<d.normalised().output_str()<<std::endl;
+      // {G*bss[j].m/pow(d.x,2),G*bss[j].m/pow(d.y,2),G*bss[j].m/pow(d.z,2)};
     }
+    //update acc
+
+    bss[i].ds.a = f/bss[i].m;
+    bss[i] = update_bs(bss[i]);
   }
   return bss;
 }
@@ -126,7 +138,7 @@ void printBss(Bss bss) {
 }
 int main() {
   InitWindow(global.winSize.x, global.winSize.y, "meow");
-  //SetTargetFPS(10);
+  SetTargetFPS(100);
   camera.position = global.camera_startPos;
 
   camera.target = global.camera_startTarget;
@@ -139,9 +151,11 @@ int main() {
   UnloadImage(img);
 
   Bs a;
-  a.v = {4.2, 1, 2};
+  a.pos = {2, 0, 0};
+  a.v = {0, -1, 0};
   Bs b;
-  b.v = {-4.2, 1, 2};
+  b.pos = {-2, 0, 0};
+  b.v = {0, 1, 0};
   Bss bss = {a, b};
   while (!WindowShouldClose()) {
     bss = update(bss);
