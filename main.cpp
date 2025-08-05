@@ -54,15 +54,26 @@ void drawCircle(vctr centerOffset, float radius, Color color, float scale) {
   }
   rlEnd();
 }
+struct Ds {
+  vctr v;
+  vctr a;
+  Ds() : v(), a() {};
+  Ds(vctr aa, vctr b) : v(aa), a(b) {};
+  void print() {
+    std::cout << "velocity: " << v.output_str()
+              << "\nacceleration: " << a.output_str() << std::endl;
+  }
+};
 
-struct bs_struct {
+struct Bs {
 
   vctr pos;
   vctr v;
   double m;
-  bs_struct() : pos(), v(), m(1) {};
-  bs_struct(vctr a, vctr b) : pos(a), v(b), m(1) {};
-  bs_struct(vctr a, vctr b, double c) : pos(a), v(b), m(c) {};
+  Ds ds;
+  Bs() : pos(), v(), m(1) {};
+  Bs(vctr a, vctr b) : pos(a), v(b), m(1) {};
+  Bs(vctr a, vctr b, double c) : pos(a), v(b), m(c) {};
   void print() {
     std::cout << "position: " << pos.output_str()
               << "\nvelocity: " << v.output_str() << "\nmass: " << m
@@ -72,22 +83,11 @@ struct bs_struct {
 
 // delta state
 // body state * time
-struct ds_struct {
-  vctr v;
-  vctr a;
-  ds_struct() : v(), a() {};
-  ds_struct(vctr aa, vctr b) : v(aa), a(b) {};
-  void print() {
-    std::cout << "velocity: " << v.output_str()
-              << "\nacceleration: " << a.output_str() << std::endl;
-  }
-};
-using Bss = std::array<bs_struct, nOfBodies>;
+using Bss = std::array<Bs, nOfBodies>;
 
-bs_struct update_bs(bs_struct bs) {
+Bs update_bs(Bs bs) {
   double dt = global.constTimeStep * GetFrameTime() * global.speed;
   vctr a;
-  
 
 
 
@@ -98,8 +98,17 @@ bs_struct update_bs(bs_struct bs) {
 }
 
 Bss update(Bss bss) {
-  for (int i = 0; i < nOfBodies; i++) {
+  double d_mag;
+  vctr d;
+  for (int i = 0; i    < nOfBodies; i++){
+  for (int j = 0; j    < nOfBodies; j++){
+      //if i and j werent run b4
+    d=bss[i].pos-bss[j].pos;
+    bss[i].ds.a={0,0,0};
+
+
     bss[i] = update_bs(bss[i]);
+    }
   }
   return bss;
 }
@@ -129,9 +138,9 @@ int main() {
   Texture texture = LoadTextureFromImage(img);
   UnloadImage(img);
 
-  bs_struct a;
+  Bs a;
   a.v = {4.2, 1, 2};
-  bs_struct b;
+  Bs b;
   b.v = {-4.2, 1, 2};
   Bss bss = {a, b};
   while (!WindowShouldClose()) {

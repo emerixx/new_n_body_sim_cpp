@@ -12,6 +12,7 @@ struct vctr {
   vctr(double x_in, double y_in, double z_in) : x(x_in), y(y_in), z(z_in) {}
   vctr() : x(0), y(0), z(0) {}
   std::string output_str();
+  double magnitude();
 };
 
 struct vctrf {
@@ -28,7 +29,6 @@ vctr operator+(vctr a, vctr b);
 vctr operator/(vctr a, double b);
 vctr operator*(vctr a, double b);
 vctrf vecToVecf(vctr a);
-double magnitude(vctr a);
 vctr normalize(vctr a);
 vctr opposite(vctr a);
 void print(vctr a);

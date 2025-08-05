@@ -13,12 +13,12 @@ vctr operator*(vctr a, double b) { return vctr(a.x * b, a.y * b, a.z * b); }
 
 vctrf vecToVecf(vctr a) { return vctrf(a.x, a.y, a.z); }
 
-double magnitude(vctr a) {
-  return sqrt(pow(a.x, 2) + pow(a.y, 2) + pow(a.z, 2));
-}
+double vctr::magnitude() {
+  return sqrt(pow(x, 2)+pow(y,2)+pow(z,2));
+};
 
 vctr normalize(vctr a) {
-  double mag = magnitude(a);
+  double mag = a.magnitude();
   return vctr(a.x / mag, a.y / mag, a.z / mag);
 }
 vctr opposite(vctr a) { return vctr(-a.x, -a.y, -a.z); }
