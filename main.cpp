@@ -6,10 +6,10 @@
 #include <iostream>
 #include <raylib.h>
 
-const int nOfBodies = 2;
+const int nOfBodies = 3;
 const double pi = global.pi;
 const double G = global.G;
-const Color clrs[] = {RED, BLUE};
+const Color clrs[] = {RED, BLUE, GREEN};
 Camera camera;
 Image img;
 Texture texture;
@@ -88,7 +88,7 @@ using Bss = std::array<Bs, nOfBodies>;
 
 Bs update_bs(Bs bs) {
   double dt = global.constTimeStep * GetFrameTime() * global.speed;
-  std::cout<<"dt: "<<dt<<std::endl;
+  //std::cout << "dt: " << dt << std::endl;
   bs.pos = bs.pos + bs.v * dt;
   bs.v = bs.v + bs.ds.a * dt;
   return bs;
@@ -96,37 +96,45 @@ Bs update_bs(Bs bs) {
 
 Bss update(Bss bss) {
   double d_mag;
-  double f_mag;
+  std::array<double,nOfBodies> f_mag;
   vctr d;
   vctr f;
+  for(int i=0; i<nOfBodies; i++){
+    f_mag[i]=0;
+  }
   for (int i = 0; i < nOfBodies; i++) {
     bss[i].ds.a = {0, 0, 0};
+    f=vctr();
     for (int j = 0; j < nOfBodies; j++) {
-      if (i==j) continue;
-      std::cout<<"i|j: "<<i<<"|"<<j<<std::endl;;
+      if (i == j)
+        continue;
+      //std::cout << "i|j: " << i << "|" << j << std::endl;
+      
       // if i and j werent run b4
 
       d = (bss[i].pos - bss[j].pos);
       d_mag = d.magnitude();
-      f_mag=0;
+
       //-0.005<d.x<0.005
-      if(d_mag > -0.005 || d_mag < 0.005) f_mag = G * bss[j].m / pow(d_mag, 2);
-      
-      f=f- f_mag*d.normalised();
-      std::cout<<"f_mag: "<<f_mag<<std::endl;
-      std::cout<<"d.norm: "<<d.normalised().output_str()<<std::endl;
+      if ((d_mag > -0.005 || d_mag < 0.005))
+        f_mag[i] = G * bss[j].m / pow(d_mag, 2);
+
+      f = f - f_mag[i] * d.normalised();
+      //std::cout << "f_mag: " << f_mag[i] << std::endl;
+      //std::cout << "d.norm: " << d.normalised().output_str() << std::endl;
       // {G*bss[j].m/pow(d.x,2),G*bss[j].m/pow(d.y,2),G*bss[j].m/pow(d.z,2)};
     }
-    //update acc
+    // update acc
+    //std::cout << "force: " << f.output_str() << "; i:" << i << std::endl;
 
-    bss[i].ds.a = f/bss[i].m;
+    bss[i].ds.a = f / bss[i].m;
     bss[i] = update_bs(bss[i]);
   }
   return bss;
 }
 void drawBss(Bss bss) {
   for (int i = 0; i < nOfBodies; i++) {
-    drawCircle(bss[i].pos, 10, clrs[i], global.drawScale);
+    drawCircle(bss[i].pos, global.circle_radius, clrs[i], global.drawScale);
   }
 }
 void printBss(Bss bss) {
@@ -138,7 +146,6 @@ void printBss(Bss bss) {
 }
 int main() {
   InitWindow(global.winSize.x, global.winSize.y, "meow");
-  SetTargetFPS(100);
   camera.position = global.camera_startPos;
 
   camera.target = global.camera_startTarget;
@@ -156,10 +163,13 @@ int main() {
   Bs b;
   b.pos = {-2, 0, 0};
   b.v = {0, 1, 0};
-  Bss bss = {a, b};
+  Bs c;
+  c.pos={0, 2, 0};
+  c.v={1,0,0};
+  Bss bss = {a, b,c};
   while (!WindowShouldClose()) {
     bss = update(bss);
-    printBss(bss);
+    //printBss(bss);
 
     BeginDrawing();
     ClearBackground(BLACK);
