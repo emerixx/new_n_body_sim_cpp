@@ -3,10 +3,14 @@
 #include "vctr.hpp"
 #include <array>
 #include <cmath>
+#include <fstream>
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include <raylib.h>
+#include <string>
 
-const int nOfBodies = 3;
+using json = nlohmann::json;
+const int n_of_bodies = 3;
 const double pi = global.pi;
 const double G = global.G;
 const Color clrs[] = {RED, BLUE, GREEN};
@@ -84,11 +88,11 @@ struct Bs {
 
 // delta state
 // body state * time
-using Bss = std::array<Bs, nOfBodies>;
+using Bss = std::array<Bs, n_of_bodies>;
 
 Bs update_bs(Bs bs) {
   double dt = global.constTimeStep * GetFrameTime() * global.speed;
-  //std::cout << "dt: " << dt << std::endl;
+  // std::cout << "dt: " << dt << std::endl;
   bs.pos = bs.pos + bs.v * dt;
   bs.v = bs.v + bs.ds.a * dt;
   return bs;
@@ -96,20 +100,20 @@ Bs update_bs(Bs bs) {
 
 Bss update(Bss bss) {
   double d_mag;
-  std::array<double,nOfBodies> f_mag;
+  std::array<double, n_of_bodies> f_mag;
   vctr d;
   vctr f;
-  for(int i=0; i<nOfBodies; i++){
-    f_mag[i]=0;
+  for (int i = 0; i < n_of_bodies; i++) {
+    f_mag[i] = 0;
   }
-  for (int i = 0; i < nOfBodies; i++) {
+  for (int i = 0; i < n_of_bodies; i++) {
     bss[i].ds.a = {0, 0, 0};
-    f=vctr();
-    for (int j = 0; j < nOfBodies; j++) {
+    f = vctr();
+    for (int j = 0; j < n_of_bodies; j++) {
       if (i == j)
         continue;
-      //std::cout << "i|j: " << i << "|" << j << std::endl;
-      
+      // std::cout << "i|j: " << i << "|" << j << std::endl;
+
       // if i and j werent run b4
 
       d = (bss[i].pos - bss[j].pos);
@@ -120,12 +124,12 @@ Bss update(Bss bss) {
         f_mag[i] = G * bss[j].m / pow(d_mag, 2);
 
       f = f - f_mag[i] * d.normalised();
-      //std::cout << "f_mag: " << f_mag[i] << std::endl;
-      //std::cout << "d.norm: " << d.normalised().output_str() << std::endl;
-      // {G*bss[j].m/pow(d.x,2),G*bss[j].m/pow(d.y,2),G*bss[j].m/pow(d.z,2)};
+      // std::cout << "f_mag: " << f_mag[i] << std::endl;
+      // std::cout << "d.norm: " << d.normalised().output_str() << std::endl;
+      //  {G*bss[j].m/pow(d.x,2),G*bss[j].m/pow(d.y,2),G*bss[j].m/pow(d.z,2)};
     }
     // update acc
-    //std::cout << "force: " << f.output_str() << "; i:" << i << std::endl;
+    // std::cout << "force: " << f.output_str() << "; i:" << i << std::endl;
 
     bss[i].ds.a = f / bss[i].m;
     bss[i] = update_bs(bss[i]);
@@ -133,12 +137,12 @@ Bss update(Bss bss) {
   return bss;
 }
 void drawBss(Bss bss) {
-  for (int i = 0; i < nOfBodies; i++) {
+  for (int i = 0; i < n_of_bodies; i++) {
     drawCircle(bss[i].pos, global.circle_radius, clrs[i], global.drawScale);
   }
 }
 void printBss(Bss bss) {
-  for (int i = 0; i < nOfBodies; i++) {
+  for (int i = 0; i < n_of_bodies; i++) {
     std::cout << i << "{\n";
     bss[i].print();
     std::cout << "};\n";
@@ -156,20 +160,25 @@ int main() {
   Image img = GenImageColor(32, 32, WHITE);
   Texture texture = LoadTextureFromImage(img);
   UnloadImage(img);
+  Bss bss;
+  // Load from file
+  std::ifstream fin(global.setup_dir + "body_setup.json");
+  json j;
+  fin >> j;
+  Bs bs;
+  for (int i = 0; i < n_of_bodies; i++) {
+    bs.pos.x = j["body" + std::to_string(i)]["pos"][0];
+    bs.pos.y = j["body" + std::to_string(i)]["pos"][1];
+    bs.pos.z = j["body" + std::to_string(i)]["pos"][2];
+    bs.v = j["body" + std::to_string(i)]["v"];
+    bs.m = j["body" + std::to_string(i)]["m"];
+  }
+  std::cout << "bs[0].pos: " << j["body0"]["pos"] << std::endl;
+  return 0;
 
-  Bs a;
-  a.pos = {2, 0, 0};
-  a.v = {0, -1, 0};
-  Bs b;
-  b.pos = {-2, 0, 0};
-  b.v = {0, 1, 0};
-  Bs c;
-  c.pos={0, 2, 0};
-  c.v={1,0,0};
-  Bss bss = {a, b,c};
   while (!WindowShouldClose()) {
     bss = update(bss);
-    //printBss(bss);
+    // printBss(bss);
 
     BeginDrawing();
     ClearBackground(BLACK);

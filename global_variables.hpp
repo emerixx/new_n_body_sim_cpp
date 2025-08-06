@@ -3,6 +3,7 @@
 #include "vctr.hpp"
 #include <cmath>
 #include <raylib.h>
+#include <string>
 struct {
   
   const double pi = 3.1415926535897932384626433832795028841971693993751;
@@ -13,7 +14,7 @@ struct {
   const int circleSegments = 10;
   const int grid_spacing = 20;
   const int grid_lines = 25;
-
+const std::string setup_dir="./input/";
   const Vector3 camera_startPos = {0, 0, 250};
   const Vector3 camera_startTarget = {0, 0, 0};
   const Vector3 camera_up = {0, 1, 0};
