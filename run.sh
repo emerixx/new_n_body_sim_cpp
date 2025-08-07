@@ -1,1 +1,1 @@
-make && ./program.out
+make && rm output/* -f && ./program.out

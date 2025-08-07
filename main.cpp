@@ -14,6 +14,8 @@ const int n_of_bodies = 3;
 const double pi = global.pi;
 const double G = global.G;
 const Color clrs[] = {RED, BLUE, GREEN};
+const int grid_spacing = 20;
+const int grid_lines = 25;
 Camera camera;
 Image img;
 Texture texture;
@@ -141,6 +143,11 @@ void drawBss(Bss bss) {
     drawCircle(bss[i].pos, global.circle_radius, clrs[i], global.drawScale);
   }
 }
+void saveBss(Bss bss, std::ofstream fo[]) {
+  for (int i = 0; i < n_of_bodies; i++) {
+    fo[i] << bss[i].pos.output_str() + "\n";
+  }
+}
 void printBss(Bss bss) {
   for (int i = 0; i < n_of_bodies; i++) {
     std::cout << i << "{\n";
@@ -170,15 +177,26 @@ int main() {
     bs.pos.x = j["body" + std::to_string(i)]["pos"][0];
     bs.pos.y = j["body" + std::to_string(i)]["pos"][1];
     bs.pos.z = j["body" + std::to_string(i)]["pos"][2];
-    bs.v = j["body" + std::to_string(i)]["v"];
+    bs.v.x = j["body" + std::to_string(i)]["v"][0];
+    bs.v.y = j["body" + std::to_string(i)]["v"][1];
+    bs.v.z = j["body" + std::to_string(i)]["v"][2];
     bs.m = j["body" + std::to_string(i)]["m"];
+    bss[i] = bs;
   }
-  std::cout << "bs[0].pos: " << j["body0"]["pos"] << std::endl;
-  return 0;
+  fin.close();
+  std::ofstream fo[n_of_bodies];
 
+  for (int i = 0; i < n_of_bodies; ++i) {
+    fo[i].open(global.output_dir + "body" + std::to_string(i));
+    if (!fo[i]) {
+      std::cerr << "Failed to open "
+                << global.output_dir + "body" + std::to_string(i) << std::endl;
+      return 1;
+    }
+  }
+  int x = 0;
   while (!WindowShouldClose()) {
     bss = update(bss);
-    // printBss(bss);
 
     BeginDrawing();
     ClearBackground(BLACK);
@@ -190,9 +208,15 @@ int main() {
     drawGrid(global.grid_lines, global.grid_spacing, WHITE);
     rlPopMatrix();
     drawBss(bss);
+    if (x == global.out_to_f_step) {
+      x = 0;
+      saveBss(bss, fo);
+    }
     EndMode3D();
     EndDrawing();
+    x++;
   }
-
+  for (int i; i < n_of_bodies; i++)
+    fo[i].close();
   return 0;
 }

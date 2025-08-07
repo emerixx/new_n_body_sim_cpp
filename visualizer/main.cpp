@@ -8,22 +8,23 @@
 #include <raylib.h>
 #include <string>
 
-using json = nlohmann::json;
 const int circle_segments = 10;
 const int n_of_bodies = 3;
+const int block_size=10000;
 const double pi = 3.1415926535897932384626433832795028841971693993751;
-const double G = 4 * pow(pi, 2); // AU^3 MO^-1 Year^-2
 const Color clrs[] = {RED, BLUE, GREEN};
 const Vector3 winSize = {1000, 1000};
 const Vector3 winCenter = {winSize.x / 2, winSize.y / 2};
+const int grid_spacing = 20;
+const int grid_lines = 25;
 Camera camera;
 Image img;
 Texture texture;
 bool is_stopped = false;
-  const Vector3 camera_startPos = {0, 0, 250};
-  const Vector3 camera_startTarget = {0, 0, 0};
-  const Vector3 camera_up = {0, 1, 0};
-  const float camera_startFovy = 60;
+const Vector3 camera_startPos = {0, 0, 250};
+const Vector3 camera_startTarget = {0, 0, 0};
+const Vector3 camera_up = {0, 1, 0};
+const float camera_startFovy = 60;
 
 void drawGrid(int slices, float spacing, Color color) {
 
@@ -65,80 +66,26 @@ void drawCircle(vctr centerOffset, float radius, Color color, float scale) {
   }
   rlEnd();
 }
-struct Ds {
-  vctr v;
-  vctr a;
-  Ds() : v(), a() {};
-  Ds(vctr aa, vctr b) : v(aa), a(b) {};
-  void print() {
-    std::cout << "velocity: " << v.output_str()
-              << "\nacceleration: " << a.output_str() << std::endl;
-  }
-};
 
-struct Bs {
+using pos_arr = std::array<std::array<vctr, n_of_bodies>,block_size>;
+pos_arr load_next_block(pos_arr current_pos_arr){
 
-  vctr pos;
-  vctr v;
-  double m;
-  Ds ds;
-  Bs() : pos(), v(), m(1) {};
-  Bs(vctr a, vctr b) : pos(a), v(b), m(1) {};
-  Bs(vctr a, vctr b, double c) : pos(a), v(b), m(c) {};
-  void print() {
-    std::cout << "position: " << pos.output_str()
-              << "\nvelocity: " << v.output_str() << "\nmass: " << m
-              << std::endl;
-  }
-};
-
-// delta state
-// body state * time
-
-// drawCircle(bss[i].pos, global.circle_radius, clrs[i], global.drawScale);
+}
 
 int main() {
   InitWindow(winSize.x, winSize.y, "meow");
   camera.position = camera_startPos;
 
-  camera.target = global.camera_startTarget;
-  camera.up = global.camera_up;
-  camera.fovy = global.camera_startFovy;
+  camera.target = camera_startTarget;
+  camera.up = camera_up;
+  camera.fovy = camera_startFovy;
   camera.projection = CAMERA_PERSPECTIVE;
 
   Image img = GenImageColor(32, 32, WHITE);
   Texture texture = LoadTextureFromImage(img);
   UnloadImage(img);
-  Bss bss;
-  // Load from file
-  std::ifstream fin(global.setup_dir + "body_setup.json");
-  json j;
-  fin >> j;
-  Bs bs;
-  for (int i = 0; i < n_of_bodies; i++) {
-    bs.pos.x = j["body" + std::to_string(i)]["pos"][0];
-    bs.pos.y = j["body" + std::to_string(i)]["pos"][1];
-    bs.pos.z = j["body" + std::to_string(i)]["pos"][2];
-    bs.v.x = j["body" + std::to_string(i)]["v"][0];
-    bs.v.y = j["body" + std::to_string(i)]["v"][1];
-    bs.v.z = j["body" + std::to_string(i)]["v"][2];
-    bs.m = j["body" + std::to_string(i)]["m"];
-    bss[i] = bs;
-  }
-  fin.close();
-  std::ofstream fo[n_of_bodies];
-
-  for (int i = 0; i < n_of_bodies; ++i) {
-    fo[i].open(global.output_dir + "body" + std::to_string(i));
-    if (!fo[i]) {
-      std::cerr << "Failed to open "
-                << global.output_dir + "body" + std::to_string(i) << std::endl;
-      return 1;
-    }
-  }
   int x = 0;
   while (!WindowShouldClose()) {
-    bss = update(bss);
 
     BeginDrawing();
     ClearBackground(BLACK);
@@ -147,13 +94,9 @@ int main() {
     BeginMode3D(camera);
     rlPushMatrix();
     rlRotatef(90, 1, 0, 0);
-    drawGrid(global.grid_lines, global.grid_spacing, WHITE);
+    drawGrid(grid_lines, grid_spacing, WHITE);
     rlPopMatrix();
-    drawBss(bss);
-    if (x == global.out_to_f_step) {
-      x = 0;
-      saveBss(bss, fo);
-    }
+    //drawBss(bss);
     EndMode3D();
     EndDrawing();
     x++;

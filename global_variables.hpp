@@ -11,10 +11,12 @@ struct {
   //like, why tf is it 4pi^2, wtf
   const double G = 4 * pow(pi, 2); // AU^3 MO^-1 Year^-2
   const double constTimeStep = pow(10, -2);
+  const int out_to_f_step = pow(10, 1);
   const int circleSegments = 10;
   const int grid_spacing = 20;
   const int grid_lines = 25;
 const std::string setup_dir="./input/";
+  const std::string output_dir="./output/";
   const Vector3 camera_startPos = {0, 0, 250};
   const Vector3 camera_startTarget = {0, 0, 0};
   const Vector3 camera_up = {0, 1, 0};
