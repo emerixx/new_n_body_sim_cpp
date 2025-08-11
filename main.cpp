@@ -6,16 +6,15 @@
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
-#include <raylib.h>
 #include <string>
 
 using json = nlohmann::json;
-const int n_of_bodies = 3;
+const int n_of_bodies = 2;
 const double pi = global.pi;
 const double G = global.G;
+const bool output_to_file = 1;
+const bool output_to_window = 0;
 const Color clrs[] = {RED, BLUE, GREEN};
-const int grid_spacing = 20;
-const int grid_lines = 25;
 Camera camera;
 Image img;
 Texture texture;
@@ -156,19 +155,20 @@ void printBss(Bss bss) {
   }
 }
 int main() {
-  InitWindow(global.winSize.x, global.winSize.y, "meow");
-  camera.position = global.camera_startPos;
+  if (output_to_window) {
+    InitWindow(global.winSize.x, global.winSize.y, "meow");
+    camera.position = global.camera_startPos;
 
-  camera.target = global.camera_startTarget;
-  camera.up = global.camera_up;
-  camera.fovy = global.camera_startFovy;
-  camera.projection = CAMERA_PERSPECTIVE;
+    camera.target = global.camera_startTarget;
+    camera.up = global.camera_up;
+    camera.fovy = global.camera_startFovy;
+    camera.projection = CAMERA_PERSPECTIVE;
 
-  Image img = GenImageColor(32, 32, WHITE);
-  Texture texture = LoadTextureFromImage(img);
-  UnloadImage(img);
+    Image img = GenImageColor(32, 32, WHITE);
+    Texture texture = LoadTextureFromImage(img);
+    UnloadImage(img);
+  }
   Bss bss;
-  // Load from file
   std::ifstream fin(global.setup_dir + "body_setup.json");
   json j;
   fin >> j;
@@ -184,39 +184,60 @@ int main() {
     bss[i] = bs;
   }
   fin.close();
-  std::ofstream fo[n_of_bodies];
+  std::ofstream files_out[n_of_bodies];
 
   for (int i = 0; i < n_of_bodies; ++i) {
-    fo[i].open(global.output_dir + "body" + std::to_string(i));
-    if (!fo[i]) {
+    files_out[i].open(global.output_dir + "body" + std::to_string(i));
+    if (!files_out[i]) {
       std::cerr << "Failed to open "
                 << global.output_dir + "body" + std::to_string(i) << std::endl;
       return 1;
     }
   }
   int x = 0;
-  while (!WindowShouldClose()) {
-    bss = update(bss);
-
-    BeginDrawing();
-    ClearBackground(BLACK);
-    DrawFPS(0, 0);
-
-    BeginMode3D(camera);
-    rlPushMatrix();
-    rlRotatef(90, 1, 0, 0);
-    drawGrid(global.grid_lines, global.grid_spacing, WHITE);
-    rlPopMatrix();
-    drawBss(bss);
-    if (x == global.out_to_f_step) {
-      x = 0;
-      saveBss(bss, fo);
+  if (output_to_window) {
+    while (!WindowShouldClose()) {
+      bss = update(bss);
+      if (output_to_window) {
+        BeginDrawing();
+        ClearBackground(BLACK);
+        DrawFPS(0, 0);
+        BeginMode3D(camera);
+        rlPushMatrix();
+        rlRotatef(90, 1, 0, 0);
+        drawGrid(global.grid_lines, global.grid_spacing, WHITE);
+        rlPopMatrix();
+        drawBss(bss);
+        EndMode3D();
+        EndDrawing();
+      }
+      if (x == global.output_to_file_every_n_steps && output_to_file) {
+        x = 0;
+        saveBss(bss, files_out);
+      }
+      x++;
     }
-    EndMode3D();
-    EndDrawing();
-    x++;
+    for (int i; i < n_of_bodies; i++) {
+      files_out[i].close();
+    }
   }
-  for (int i; i < n_of_bodies; i++)
-    fo[i].close();
+  if (output_to_file && !output_to_window) {
+    std::cout << "Outputing to files every "
+              << global.output_to_file_every_n_steps << " steps\n";
+    std::cout << "Time to compute, (10^n): ";
+    std::string input;
+    std::cin >> input;
+    int exp = std::stoi(input);
+    double time_to_compute = pow(10, exp);
+    int x = 0;
+    for (double i = 0; i < time_to_compute; i++) {
+      bss = update(bss);
+      if (x == global.output_to_file_every_n_steps) {
+        x=0;
+        saveBss(bss, files_out);
+      }
+      x++;
+    }
+  }
   return 0;
 }
