@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <raylib.h>
 #include <string>
 
 using json = nlohmann::json;
@@ -13,12 +14,16 @@ const int n_of_bodies = 2;
 const double pi = global.pi;
 const double G = global.G;
 const bool output_to_file = 1;
-const bool output_to_window = 0;
 const Color clrs[] = {RED, BLUE, GREEN};
 Camera camera;
 Image img;
 Texture texture;
 bool is_stopped = false;
+
+double B[7][6];
+
+double CH[] = {0,         16.0 / 135, 0, 6656.0 / 12825, 28561.0 / 56430,
+               -9.0 / 50, 2.0 / 55};
 
 void drawGrid(int slices, float spacing, Color color) {
 
@@ -90,12 +95,30 @@ struct Bs {
 // delta state
 // body state * time
 using Bss = std::array<Bs, n_of_bodies>;
+using Dss = std::array<Ds, n_of_bodies>;
+
+
+Dss delta_state_function(Bss bss, double dt){
+
+
+
+
+}
 
 Bs update_bs(Bs bs) {
-  double dt = global.constTimeStep * GetFrameTime() * global.speed;
-  // std::cout << "dt: " << dt << std::endl;
+  double dt = global.constTimeStep * global.speed;
+  if (!output_to_file) {
+    dt = dt * GetFrameTime();
+  }
+
+
+
   bs.pos = bs.pos + bs.v * dt;
   bs.v = bs.v + bs.ds.a * dt;
+  
+  Ds k[6];
+
+
   return bs;
 }
 
@@ -155,7 +178,22 @@ void printBss(Bss bss) {
   }
 }
 int main() {
-  if (output_to_window) {
+  B[2][1] = 1.0 / 4.0;
+  B[3][1] = 3.0 / 32;
+  B[3][2] = 9.0 / 32;
+  B[4][1] = 1932.0 / 2197;
+  B[4][2] = -7200.0 / 2197;
+  B[4][3] = 7296.0 / 2197;
+  B[5][1] = 439.0 / 216;
+  B[5][2] = -8;
+  B[5][3] = 3680.0 / 513;
+  B[5][4] = -845.0 / 4104;
+  B[6][1] = -8.0 / 27;
+  B[6][2] = 2;
+  B[6][3] = -3544.0 / 2565;
+  B[6][4] = 1859.0 / 4104;
+  B[6][5] = -11.0 / 40;
+  if (!output_to_file) {
     InitWindow(global.winSize.x, global.winSize.y, "meow");
     camera.position = global.camera_startPos;
 
@@ -184,46 +222,34 @@ int main() {
     bss[i] = bs;
   }
   fin.close();
-  std::ofstream files_out[n_of_bodies];
-
-  for (int i = 0; i < n_of_bodies; ++i) {
-    files_out[i].open(global.output_dir + "body" + std::to_string(i));
-    if (!files_out[i]) {
-      std::cerr << "Failed to open "
-                << global.output_dir + "body" + std::to_string(i) << std::endl;
-      return 1;
-    }
-  }
-  int x = 0;
-  if (output_to_window) {
+  if (!output_to_file) {
     while (!WindowShouldClose()) {
       bss = update(bss);
-      if (output_to_window) {
-        BeginDrawing();
-        ClearBackground(BLACK);
-        DrawFPS(0, 0);
-        BeginMode3D(camera);
-        rlPushMatrix();
-        rlRotatef(90, 1, 0, 0);
-        drawGrid(global.grid_lines, global.grid_spacing, WHITE);
-        rlPopMatrix();
-        drawBss(bss);
-        EndMode3D();
-        EndDrawing();
-      }
-      if (x == global.output_to_file_every_n_steps && output_to_file) {
-        x = 0;
-        saveBss(bss, files_out);
-      }
-      x++;
-    }
-    for (int i; i < n_of_bodies; i++) {
-      files_out[i].close();
+      BeginDrawing();
+      ClearBackground(BLACK);
+      DrawFPS(0, 0);
+      BeginMode3D(camera);
+      rlPushMatrix();
+      rlRotatef(90, 1, 0, 0);
+      drawGrid(global.grid_lines, global.grid_spacing, WHITE);
+      rlPopMatrix();
+      drawBss(bss);
+      EndMode3D();
+      EndDrawing();
     }
   }
-  if (output_to_file && !output_to_window) {
-    std::cout << "Outputing to files every "
-              << global.output_to_file_every_n_steps << " steps\n";
+  if (output_to_file) {
+    std::ofstream files_out[n_of_bodies];
+
+    for (int i = 0; i < n_of_bodies; ++i) {
+      files_out[i].open(global.output_dir + "body" + std::to_string(i));
+      if (!files_out[i]) {
+        std::cerr << "Failed to open "
+                  << global.output_dir + "body" + std::to_string(i)
+                  << std::endl;
+        return 1;
+      }
+    }
     std::cout << "Time to compute, (10^n): ";
     std::string input;
     std::cin >> input;
@@ -232,11 +258,16 @@ int main() {
     int x = 0;
     for (double i = 0; i < time_to_compute; i++) {
       bss = update(bss);
-      if (x == global.output_to_file_every_n_steps) {
-        x=0;
+      if (x == time_to_compute / global.output_to_file_per_computation) {
+        x = 0;
         saveBss(bss, files_out);
+        std::cout << i / time_to_compute * 100 << "%\n";
       }
       x++;
+    }
+    printBss(bss);
+    for (int i = 0; i < n_of_bodies; i++) {
+      files_out[i].close();
     }
   }
   return 0;

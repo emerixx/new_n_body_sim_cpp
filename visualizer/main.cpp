@@ -92,8 +92,10 @@ pos_arr load_next_block(std::ifstream fin[n_of_bodies]) {
   std::string line;
   for (int i = 0; i < n_of_bodies; i++) {
     for (int j = 0; j < block_size; j++) {
-      if (std::getline(fin[0], line)) {
+      if (std::getline(fin[i], line)) {
         out[i][j] = line_to_vctr(line);
+        blocks_read++;
+        std::cout << "loaded next block\n";
       } else {
         hit_end = true;
         end_line = blocks_read * block_size + j;
@@ -103,8 +105,6 @@ pos_arr load_next_block(std::ifstream fin[n_of_bodies]) {
       }
     }
   }
-  blocks_read++;
-  std::cout << "loaded next block\n";
   return out;
   /*
   std::stringstream ss(line);
@@ -126,7 +126,7 @@ pos_arr load_next_block(std::ifstream fin[n_of_bodies]) {
 
 int main() {
   InitWindow(winSize.x, winSize.y, "meow");
-  SetTargetFPS(60);
+  SetTargetFPS(10);
   camera.position = camera_startPos;
   pos_arr current_block;
   camera.target = camera_startTarget;
@@ -164,8 +164,9 @@ int main() {
 
     if (x < block_size || hit_end) {
       // dont read block
+      std::cout << "x: " << x << std::endl;
       for (int i = 0; i < n_of_bodies; i++) {
-        drawCircle(current_block[i][x], 5, clrs[i], 1);
+        drawCircle(current_block[i][x], 3, clrs[i], 5);
       }
     } else if (!hit_end) {
       x = 0;
@@ -174,7 +175,7 @@ int main() {
 
     EndMode3D();
     EndDrawing();
-    if (!hit_end) {
+    if (!hit_end || x < end_line - block_size * blocks_read) {
       x++;
     }
   }

@@ -11,8 +11,8 @@ struct {
   //if ur asking how i derived G, i have no idea, i probably pulled it out of the deepest part of my ass
   //like, why tf is it 4pi^2, wtf
   const double G = 4 * pow(pi, 2); // AU^3 MO^-1 Year^-2
-  const double constTimeStep = pow(10, -1);
-  const int output_to_file_every_n_steps = pow(10, 1);
+  const double constTimeStep = pow(10, -4);
+  const int output_to_file_per_computation = pow(10, 4);
   const int circleSegments = 10;
   const int grid_spacing = 20;
   const int grid_lines = 25;
