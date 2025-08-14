@@ -11,7 +11,7 @@
 
 const int circle_segments = 10;
 const int n_of_bodies = 2;
-const int block_size = 10000;
+const int block_size = 1000;
 const double pi = 3.1415926535897932384626433832795028841971693993751;
 const Color clrs[] = {RED, BLUE, GREEN};
 const Vector3 winSize = {1000, 1000};
@@ -90,21 +90,28 @@ vctr line_to_vctr(std::string ln) {
 pos_arr load_next_block(std::ifstream fin[n_of_bodies]) {
   pos_arr out;
   std::string line;
+  std::cout << "loading next block, blocks loaded/read: " << blocks_read
+            << std::endl;
   for (int i = 0; i < n_of_bodies; i++) {
     for (int j = 0; j < block_size; j++) {
+      std::cout << j << std::endl;
       if (std::getline(fin[i], line)) {
+
         out[i][j] = line_to_vctr(line);
-        blocks_read++;
-        std::cout << "loaded next block\n";
+        if (i == 0) {
+          // only count blocks read for the 1st body
+        }
       } else {
         hit_end = true;
         end_line = blocks_read * block_size + j;
         std::cout << "End of file (body" << i << ") at line" << end_line
                   << "\n";
-        break;
+        // break;
       }
     }
   }
+  blocks_read++;
+
   return out;
   /*
   std::stringstream ss(line);
@@ -126,7 +133,7 @@ pos_arr load_next_block(std::ifstream fin[n_of_bodies]) {
 
 int main() {
   InitWindow(winSize.x, winSize.y, "meow");
-  SetTargetFPS(10);
+  SetTargetFPS(60);
   camera.position = camera_startPos;
   pos_arr current_block;
   camera.target = camera_startTarget;
@@ -164,9 +171,9 @@ int main() {
 
     if (x < block_size || hit_end) {
       // dont read block
-      std::cout << "x: " << x << std::endl;
+      std::cout << x << "/" << block_size << std::endl;
       for (int i = 0; i < n_of_bodies; i++) {
-        drawCircle(current_block[i][x], 3, clrs[i], 5);
+        drawCircle(current_block[i][x], 5, clrs[i], 50);
       }
     } else if (!hit_end) {
       x = 0;
