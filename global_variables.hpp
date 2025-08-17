@@ -13,6 +13,7 @@ struct {
   const double G = 4 * pow(pi, 2); // AU^3 MO^-1 Year^-2
   const double constTimeStep = pow(10, -6);
   const int output_to_file_per_computation = pow(10, 4);
+const double steps_to_compute = pow(10,5);
   const int circleSegments = 10;
   const int grid_spacing = 20;
   const int grid_lines = 25;

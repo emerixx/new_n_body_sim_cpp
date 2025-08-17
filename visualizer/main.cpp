@@ -10,7 +10,7 @@
 #include <string>
 
 const int circle_segments = 10;
-const int n_of_bodies = 2;
+const int n_of_bodies = 3;
 const int block_size = 1000;
 const double pi = 3.1415926535897932384626433832795028841971693993751;
 const Color clrs[] = {RED, BLUE, GREEN};
@@ -18,6 +18,7 @@ const Vector3 winSize = {1000, 1000};
 const Vector3 winCenter = {winSize.x / 2, winSize.y / 2};
 const int grid_spacing = 20;
 const int grid_lines = 25;
+const int fps=500;
 Camera camera;
 Image img;
 Texture texture;
@@ -26,6 +27,8 @@ const Vector3 camera_startPos = {0, 0, 250};
 const Vector3 camera_startTarget = {0, 0, 0};
 const Vector3 camera_up = {0, 1, 0};
 const float camera_startFovy = 60;
+const float circle_radius=5;
+const float draw_scale=500;
 
 void drawGrid(int slices, float spacing, Color color) {
 
@@ -133,7 +136,7 @@ pos_arr load_next_block(std::ifstream fin[n_of_bodies]) {
 
 int main() {
   InitWindow(winSize.x, winSize.y, "meow");
-  SetTargetFPS(60);
+  SetTargetFPS(fps);
   camera.position = camera_startPos;
   pos_arr current_block;
   camera.target = camera_startTarget;
@@ -173,7 +176,7 @@ int main() {
       // dont read block
       std::cout << x << "/" << block_size << std::endl;
       for (int i = 0; i < n_of_bodies; i++) {
-        drawCircle(current_block[i][x], 5, clrs[i], 50);
+        drawCircle(current_block[i][x], circle_radius, clrs[i], draw_scale);
       }
     } else if (!hit_end) {
       x = 0;

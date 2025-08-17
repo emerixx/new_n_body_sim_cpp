@@ -10,7 +10,7 @@
 #include <string>
 
 using json = nlohmann::json;
-const int n_of_bodies = 2;
+const int n_of_bodies = 3;
 const double pi = global.pi;
 const double G = global.G;
 const bool output_to_file = 1;
@@ -22,7 +22,8 @@ bool is_stopped = false;
 
 double B[7][6];
 
-double CH[6] = {16.0/135, 0, 6656.0/12825, 28561.0/56430, -9.0/50, 2.0/55};
+double CH[6] = {16.0 / 135,      0,         6656.0 / 12825,
+                28561.0 / 56430, -9.0 / 50, 2.0 / 55};
 
 void drawGrid(int slices, float spacing, Color color) {
 
@@ -101,7 +102,7 @@ Bss dss_times_t(Dss dss, double t) {
   Bss out;
   for (int i = 0; i < n_of_bodies; i++) {
 
-    out[i] = Bs(dss[i].v *t, dss[i].a *t);
+    out[i] = Bs(dss[i].v * t, dss[i].a * t);
   }
   return out;
 }
@@ -163,7 +164,7 @@ Dss operator+(Dss dss0, Dss dss1) {
 Bss operator+(Bss bss0, Bss bss1) {
   Bss out;
   for (int i = 0; i < n_of_bodies; i++) {
-    out[i] = Bs(bss0[i].pos +bss1[i].pos, bss0[i].v + bss1[i].v, bss0[i].m);
+    out[i] = Bs(bss0[i].pos + bss1[i].pos, bss0[i].v + bss1[i].v, bss0[i].m);
   }
   return out;
 }
@@ -212,16 +213,15 @@ Bss RKF45(Bss bss, double dt) {
   return bss;
 }
 
-Bss update(Bss bss) {
+Bss update(Bss bss, double dt) {
 
-  double dt = global.constTimeStep * global.speed;
   if (!output_to_file) {
     dt = dt * GetFrameTime();
   }
 
   bss = RKF45(bss, dt);
-  //bss = RK4(bss, dt);
-  // bss = Euler(bss, dt);
+  // bss = RK4(bss, dt);
+  //  bss = Euler(bss, dt);
   return bss;
 }
 void drawBss(Bss bss) {
@@ -288,7 +288,7 @@ int main() {
   fin.close();
   if (!output_to_file) {
     while (!WindowShouldClose()) {
-      bss = update(bss);
+      bss = update(bss, global.constTimeStep);
       BeginDrawing();
       ClearBackground(BLACK);
       DrawFPS(0, 0);
@@ -304,7 +304,54 @@ int main() {
   }
   if (output_to_file) {
     double otfpc = global.output_to_file_per_computation;
+    double cts = global.constTimeStep;
+    double stc = global.steps_to_compute;
     std::ofstream files_out[n_of_bodies];
+    std::string input;
+    int exp;
+
+    // Steps to compute START
+    // std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cout << "Steps to compute, (10^n), default 10^" << log10(stc) << ": ";
+    std::getline(std::cin, input); // Read entire line including spaces
+    if (input.empty()) {
+      std::cout << "Using default" << std::endl;
+    } else {
+      std::cout << "Using 10^" << input << std::endl;
+      exp = std::stoi(input);
+      stc = pow(10, exp);
+    }
+    // Steps to compute END
+
+    input = "";
+
+    // Constant time step START
+    std::cout << "Constant time step, (10^-n), default 10^" << log10(cts)
+              << ": ";
+    std::getline(std::cin, input); // Read entire line including spaces
+    if (input.empty()) {
+      std::cout << "Using default" << std::endl;
+    } else {
+      std::cout << "Using 10^-" << input << std::endl;
+      exp = std::stoi(input);
+      cts = pow(10, -exp);
+    }
+    // Constant time step END
+
+    input = "";
+
+    // Times to output to file START
+    std::cout << "Times to output to file, (10^n), default 10^" << log10(otfpc)
+              << ": ";
+    std::getline(std::cin, input); // Read entire line including spaces
+    if (input.empty()) {
+      std::cout << "Using default" << std::endl;
+    } else {
+      std::cout << "Using 10^" << input << std::endl;
+      exp = std::stoi(input);
+      otfpc = pow(10, exp);
+    }
+    // Times to output to file END
 
     for (int i = 0; i < n_of_bodies; ++i) {
       files_out[i].open(global.output_dir + "body" + std::to_string(i));
@@ -315,33 +362,17 @@ int main() {
         return 1;
       }
     }
-    std::cout << "Time step: " << global.constTimeStep << std::endl;
-    std::cout << "Time to compute, (10^n): ";
-    std::string input;
-    std::cin >> input;
-    int exp = std::stoi(input);
-    double time_to_compute = pow(10, exp);
-    std::cout << "Times to output to file, (10^n), default 10^" << log10(otfpc)
-              << ": " << std::endl;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::getline(std::cin, input); // Read entire line including spaces
-    if (input.empty()) {
-      std::cout << "Using default" << std::endl;
-    } else {
-      exp = std::stoi(input);
-      otfpc = pow(10, exp);
-    }
 
     int x[2] = {0, 0};
-    for (double i = 0; i <= time_to_compute; i++) {
-      bss = update(bss);
-      if (x[0] == time_to_compute / otfpc) {
+    for (double i = 0; i <= stc; i++) {
+      bss = update(bss, cts);
+      if (x[0] == stc / otfpc) {
         x[0] = 0;
         saveBss(bss, files_out);
       }
-      if (x[1] == time_to_compute / 100) {
+      if (x[1] == stc / 100) {
         x[1] = 0;
-        std::cout << i / time_to_compute * 100 << "%\n";
+        std::cout << i / stc * 100 << "%\n";
       }
       x[0]++;
       x[1]++;
