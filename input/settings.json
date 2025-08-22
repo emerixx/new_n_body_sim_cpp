@@ -1,0 +1,20 @@
+{
+    "computation": {
+        "constant_time_step_pwr": -6,
+        "number_of_bodies": 3,
+        "output_to_file_per_computation_pwr": 4,
+        "steps_to_compute_pwr": 5
+    },
+    "visualization": {
+        "base_grid_spacing": 1,
+        "block_size": 1000,
+        "circle_radius": 3,
+        "circle_segments": 10,
+        "fps": 60,
+        "grid_lines": 25,
+        "trajectories": 0,
+        "win_size_x": 1000,
+        "win_size_y": 1000,
+        "zoom_base": 10
+    }
+}

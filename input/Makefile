@@ -1,2 +1,2 @@
 all:
-	g++ -o setup.out setup.cpp
+		g++ -o gen_input.out generate_input.cpp

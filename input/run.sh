@@ -1,1 +1,1 @@
-make && ./setup.out
+make && ./gen_input.out

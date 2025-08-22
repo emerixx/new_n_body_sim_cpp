@@ -27,7 +27,6 @@ const std::string setup_dir="./input/";
   const Vector3 winSize = {1000, 1000};
   const Vector3 winCenter = {winSize.x / 2, winSize.y / 2};
   
-  const bool hasDE = true;
 
   bool trajectories = false;
   double speed = 1;
